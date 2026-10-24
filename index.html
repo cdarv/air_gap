@@ -167,6 +167,7 @@
     <p style="max-width:560px;margin:0 auto 6px">You are a single program — one lantern of light in a dark network.
       Things come for the nodes tonight. <b>Your tools each defend something real. Most things you face,
       the wrong tool simply will not stop.</b> Find the right one before it finds a node.</p>
+    <p style="max-width:600px;margin:0 auto 6px;font-size:12px"><b>The network, plainly:</b> the glowing <b>nodes</b> are computers and services — a database, a mail server, the kind of thing a company dies without. The lines are the cables they talk over; <b>packets</b> — small bundles of data — constantly travel along them. <b>You</b> are a defense program, the only one left. Three kinds of attack come for a network: <b>floods</b> (junk traffic meant to drown services), <b>malware</b> (code that shouldn't be running), and <b>spoofed packets</b> (lies dressed as your own traffic). Every tool you carry answers exactly one of them.</p>
     <p class="hint" id="menuLessons"></p>
     <div class="sect" style="text-align:left;max-width:560px;margin-left:auto;margin-right:auto">
       <p style="font-size:12px"><span class="kbd">W A S D</span> move &nbsp;·&nbsp; <span class="kbd">MOUSE</span> aim &nbsp;·&nbsp;
@@ -199,7 +200,7 @@
   <div class="panel" style="text-align:center">
     <div class="debrief-kicker win" id="cardKicker">CLUSTER SECURED</div>
     <h1 style="font-size:26px">HARDEN THE DEFENSE</h1>
-    <p class="hint">Each card is a real defense mechanism. You are designing defense-in-depth.</p>
+    <p class="hint">Pick one. Every card is a real defense mechanism: first what it means in practice, then what it does here. You are designing defense-in-depth — layers that fail differently.</p>
     <div class="cards" id="cardRow"></div>
   </div>
 </div>
@@ -512,7 +513,7 @@ function liveNodes(){return W.nodes.filter(n=>n.state==='friendly').length;}
 function startInfect(n,by){
   if(n.state!=='friendly')return;
   n.state='infected';n.hp=40;n.mesh.position.y=1.6;refreshNode(n);
-  Snd.nodeInfected();feed('NODE LOST TO ENCRYPTION — it is theirs now','bad');
+  Snd.nodeInfected();feed('A NODE WAS RANSOMED — its files are encrypted; the node now serves the attacker','bad');
   if(liveNodes()===0)endRun('allnodes','worm');
 }
 function renderNodeStrip(){
@@ -546,12 +547,12 @@ function spawnFriendlies(count){
 //   scan(2): swarm 1  worm 0   phish(hidden →REVEAL+4 / revealed 2) — radius pulse
 const DMG={0:{swarm:4,worm:0,phish:0,boss:3},1:{swarm:0,worm:10,phish:0,boss:3},2:{swarm:1,worm:0,phish:2,boss:5}};
 const WRONGMSG={
-  '0-worm':['Rate-limiting can\'t kill malware. It\'s already inside.','Policy can\'t evict code that\'s running.'],
-  '0-phish':['You can\'t drop packets you can\'t distinguish.','It looks exactly like legitimate traffic.'],
-  '1-swarm':['Encrypted packets still crush a server.','Encryption ≠ availability.'],
-  '1-phish':['Encrypting the disguise doesn\'t remove it.','Confidentiality tools don\'t detect intrusion.'],
-  '2-worm':['Inspecting the worm doesn\'t stop the worm.','Detection without response is just watching.'],
-  '2-swarm':['You are now individually auditing a flood.','Scale defeats per-item inspection.']
+  '0-worm':['Rate-limiting is a rule about how much traffic may arrive — but a worm is code already RUNNING, not traffic. ENCRYPT [2] is what ransomware fears.','Your policy governs packets; the worm ignores packets. It steals by running. Use ENCRYPT [2].'],
+  '0-phish':['You cannot drop a packet you cannot tell apart from your own. DEEP SCAN [3] first — then any tool can kill it.','It looks like legitimate traffic because that is what a phishing packet IS: legitimate traffic, lying. Scan [3] it.'],
+  '1-swarm':['Encryption protects the CONTENT of data, not the SERVICE receiving it. A million encrypted packets still crush a server. RATE-LIMIT [1].','You are encrypting your way underwater. Floods need volume policy, not secrecy. Switch to RATE-LIMIT [1].'],
+  '1-phish':['Encrypting a disguise does not remove the disguise. Encryption hides data from readers; it does not detect an impostor. DEEP SCAN [3].','A spy with encrypted messages is still a spy. Detect first with DEEP SCAN [3]; ENCRYPT protects data, not perimeters.'],
+  '2-worm':['Inspecting the worm tells you about the worm. It keeps encrypting either way. Detection without a response weapon is just note-taking — ENCRYPT [2].','Scanning is diagnosis; the worm needs treatment. ENCRYPT [2] makes your data worthless to ransomware.'],
+  '2-swarm':['You are now auditing ten thousand packets one at a time. Individual inspection loses to scale — floods need blanket policy: RATE-LIMIT [1].','Deep packet inspection is expensive; that is why floods work. Let RATE-LIMIT [1] handle volume.']
 };
 function enemyMesh(kind,disguised){
   if(kind==='swarm'){
@@ -616,7 +617,7 @@ function revealEnemy(e){
   }
   e.mesh.add(spikes);e.mesh.userData.spikes=spikes;
   addGlow(e.mesh,RED,5);
-  feed('DISGUISE DOWN — a phishing packet. Any tool cuts it now. It always could — you just couldn\'t see it.','warn');
+  feed('DISGUISE DOWN — a phishing packet. Now that it is visible, any tool kills it. It was always killable; it just was not visible.','warn');
 }
 
 // ============================================================
@@ -756,7 +757,7 @@ function tryFocusTag(){
   if(best){
     p.focusTag=best;Snd.tag();
     if(!p.everTagged){p.everTagged=true;unlockCodex('focus');}
-    feed('YOU TAGGED IT — automation suppresses. You decide. ×2 damage.','good');
+    feed('YOU TAGGED IT — your tag marks what automation cannot judge. Tagged target takes double damage.','good');
   }
 }
 function computeAim(){
@@ -869,20 +870,20 @@ const MODS_DEFAULT=()=>({speed:0,novaR:0,rateRate:0,scanCd:0,heuristics:false,pa
   honeypot:false,backups:false,threatIntel:false,zeroTrust:false,sandbox:false,encRest:false,nodeHpBonus:0});
 let MODS=MODS_DEFAULT();
 const CARDS=[
-  {id:'salt',ic:'rate',name:'SALTING',mech:'RATE LIMITING+','desc':'Nova radius +30%. Unique per-burst noise makes floods distinguishable.',apply(){MODS.novaR+=.3}},
-  {id:'tls',ic:'cycle',name:'TLS TUNNEL',mech:'ENCRYPTION IN TRANSIT','desc':'Move +15%. Armor for data in motion.',apply(){MODS.speed+=.15}},
-  {id:'did',ic:'shield',name:'DEFENSE IN DEPTH',mech:'LAYERING','desc':'All nodes +30 max HP, healed 20. Layers fail differently — that is the point.',apply(){W.nodes.forEach(n=>{if(n.state==='friendly'){n.maxHp+=30;n.hp=Math.min(n.maxHp,n.hp+20);refreshNode(n);}})}},
-  {id:'heur',ic:'scan',name:'HEURISTICS ENGINE',mech:'ANOMALY DETECTION','desc':'Phishing packets reveal themselves when they come close. Trust, but verify automatically.',apply(){MODS.heuristics=true}},
-  {id:'patch',ic:'cycle',name:'PATCH TUESDAY',mech:'PATCHING','desc':'Friendly nodes regenerate 3 HP/s. The gap between discovered and fixed is where they live.',apply(){MODS.patch=true}},
-  {id:'mfa',ic:'shield',name:'MFA GATE',mech:'MULTI-FACTOR','desc':'Attention pool +60% and refills faster. One thing an attacker can steal is already two things.',apply(){MODS.mfa=true}},
-  {id:'honeypot',ic:'star',name:'HONEYPOT NODE',mech:'DECEPTION','desc':'A fake node appears — worms prefer it. Waste their payload on a room with no doors.',apply(){MODS.honeypot=true;const n=addNode(W.player.g.position.x+rnd(-10,10),W.player.g.position.z+rnd(-10,10),40);W.decoy=n;feed('HONEYPOT DEPLOYED — a decoy joins the network','good')}},
-  {id:'backup',ic:'cycle',name:'BACKUPS',mech:'RECOVERY','desc':'The first node lost comes back at 35%. The only ransomware negotiation that works.',apply(){MODS.backups=true}},
-  {id:'intel',ic:'star',name:'THREAT INTEL',mech:'SIGIL MAPPING','desc':'Revealed threats show the sigil of the tool that actually hurts them.',apply(){MODS.threatIntel=true;W.enemies.forEach(e=>{if(e.revealed)addWeakSigil(e)})}},
-  {id:'zt',ic:'warn',name:'ZERO TRUST',mech:'VERIFY EVERYTHING','desc':'+30% damage to revealed threats. Trust is a vulnerability.',apply(){MODS.zeroTrust=true}},
-  {id:'sand',ic:'target',name:'SANDBOX',mech:'CONTAINMENT','desc':'Worms are stunned 4s when they reach a node. Let them run somewhere it means nothing.',apply(){MODS.sandbox=true}},
-  {id:'restate',ic:'enc',name:'ENCRYPTION AT REST',mech:'HARDENING','desc':'Worms cast 45% slower. Make their payoff expensive and slow.',apply(){MODS.encRest=true}},
-  {id:'bw',ic:'rate',name:'BANDWIDTH POLICY',mech:'RATE LIMITING','desc':'Rate-limiter fire rate +30%. Drop early, drop close to the door.',apply(){MODS.rateRate+=.3}},
-  {id:'rotate',ic:'cycle',name:'KEY ROTATION',mech:'HYGIENE','desc':'Deep scan cooldown −35%. Rotate often; leaked keys die young.',apply(){MODS.scanCd+=.35}}
+  {id:'salt',ic:'rate',name:'SALTING',mech:'PASSWORD HASHING','desc':'REAL: unique random bytes mixed into every password before hashing, so a stolen hash table cannot be replayed against everyone at once. GAME: your rate-limit bursts cover +30% more area.',apply(){MODS.novaR+=.3}},
+  {id:'tls',ic:'cycle',name:'TLS TUNNEL',mech:'ENCRYPTION IN TRANSIT','desc':'REAL: TLS encrypts data while it travels between machines, so anyone tapping the cable reads garbage. GAME: you move +15% faster.',apply(){MODS.speed+=.15}},
+  {id:'did',ic:'shield',name:'DEFENSE IN DEPTH',mech:'LAYERING','desc':'REAL: several different controls stacked so no single failure is fatal. GAME: all nodes +30 max HP and heal 20 now.',apply(){W.nodes.forEach(n=>{if(n.state==='friendly'){n.maxHp+=30;n.hp=Math.min(n.maxHp,n.hp+20);refreshNode(n);}})}},
+  {id:'heur',ic:'scan',name:'HEURISTICS ENGINE',mech:'ANOMALY DETECTION','desc':'REAL: instead of matching known-bad lists, flag behavior that is merely WEIRD — the trick that catches new malware. GAME: disguised phishing packets reveal themselves when they come close to you.',apply(){MODS.heuristics=true}},
+  {id:'patch',ic:'cycle',name:'PATCH TUESDAY',mech:'PATCHING','desc':'REAL: shipping the fix for a known bug before the exploit spreads. GAME: your nodes regenerate 3 HP per second.',apply(){MODS.patch=true}},
+  {id:'mfa',ic:'shield',name:'MFA GATE',mech:'MULTI-FACTOR AUTH','desc':'REAL: require two different KINDS of proof — password plus phone. Stealing one thing is no longer enough. GAME: your FOCUS pool grows +60% and refills faster.',apply(){MODS.mfa=true}},
+  {id:'honeypot',ic:'star',name:'HONEYPOT NODE',mech:'DECEPTION','desc':'REAL: a decoy system, valuable-looking and empty, that wastes attacker effort and alerts the instant it is touched. GAME: a fake node appears and worms attack it instead of your real ones.',apply(){MODS.honeypot=true;const n=addNode(W.player.g.position.x+rnd(-10,10),W.player.g.position.z+rnd(-10,10),40);W.decoy=n;feed('HONEYPOT DEPLOYED — a decoy node joins the network. It is bait.','good')}},
+  {id:'backup',ic:'cycle',name:'BACKUPS',mech:'RECOVERY','desc':'REAL: copies of your data kept somewhere the attacker is not. The one negotiation ransomware has ever lost. GAME: the first node you lose comes back once, at 35% health.',apply(){MODS.backups=true}},
+  {id:'intel',ic:'star',name:'THREAT INTEL',mech:'SIGNATURE SHARING','desc':'REAL: defenders share indicators of compromise, so a stranger in one network is recognized in all of them. GAME: revealed threats display the mark of the tool that actually hurts them.',apply(){MODS.threatIntel=true;W.enemies.forEach(e=>{if(e.revealed)addWeakSigil(e)})}},
+  {id:'zt',ic:'warn',name:'ZERO TRUST',mech:'VERIFY EVERYTHING','desc':'REAL: never trust a request because of where it came from — every packet gets verified like a stranger, because most of them are. GAME: +30% damage to revealed phishing packets.',apply(){MODS.zeroTrust=true}},
+  {id:'sand',ic:'target',name:'SANDBOX',mech:'CONTAINMENT','desc':'REAL: run suspicious code in an isolated environment where nothing outside can be harmed — let it run, learn from it, touch nothing. GAME: worms are stunned 4 seconds when they reach a node.',apply(){MODS.sandbox=true}},
+  {id:'restate',ic:'enc',name:'ENCRYPTION AT REST',mech:'HARDENING','desc':'REAL: encrypting stored data, so files that get stolen or locked are worthless ciphertext. GAME: worms take 45% longer to ransom a node.',apply(){MODS.encRest=true}},
+  {id:'bw',ic:'rate',name:'BANDWIDTH POLICY',mech:'RATE LIMITING','desc':'REAL: rate-limit rules enforced at the network edge, closest to the attacker, before traffic reaches anything important. GAME: RATE-LIMIT fires +30% faster.',apply(){MODS.rateRate+=.3}},
+  {id:'rotate',ic:'cycle',name:'KEY ROTATION',mech:'CRYPTOGRAPHIC HYGIENE','desc':'REAL: changing encryption keys regularly, so a leaked key expires before it is useful. GAME: DEEP SCAN cooldown −35%.',apply(){MODS.scanCd+=.35}}
 ];
 
 function sigilTex(kind){
@@ -929,12 +930,12 @@ function nextMap(){
   let opts;
   if(W.cluster<2){
     opts=[
-      {ic:'warn',cls:'combat',name:'ANOMALOUS TRAFFIC',intel:'Something is loud here. Loud is at least honest. More kills, more nodes to defend.'},
-      {ic:'moon',cls:'silent',name:'SILENT NODE',intel:'No packets in days. Silence is either safety or a corpse. Repair + intel, no fight. They are always quiet before a boss.'}
+      {ic:'warn',cls:'combat',name:'ANOMALOUS TRAFFIC',intel:'Heavy traffic and scanning noise — an attacker cluster, doing its work in the open. Fighting here keeps the fight off your core. More enemies, more to defend.'},
+      {ic:'moon',cls:'silent',name:'SILENT NODE',intel:'No packets have crossed here for days. Either it is safe, or something emptied it quietly. No combat: your nodes repair fully and you gather intel. Silence ahead of an attack is itself a warning.'}
     ];
     if(W.cluster===0)shuffle(opts);
   }else{
-    opts=[{ic:'target',cls:'boss',name:'THE SOURCE',intel:'Every packet trace converges here. One unknown signature, patient and unlogged. There is a zero-day at the end of this cable.'}];
+    opts=[{ic:'target',cls:'boss',name:'THE SOURCE',intel:'Every packet trace converges here. One attack signature your tools cannot name, patient and unlogged: a zero-day sits at the end of this cable. Inspection kills it. Nothing else does.'}];
   }
   opts.forEach(o=>{
     const d=document.createElement('div');d.className='mapnode '+o.cls;
@@ -952,8 +953,8 @@ function chooseMap(o){
     unlockCodex('defense');
     bigScripted({
       kicker:'SILENT NODE',title:'REPAIR, IN THE DARK',
-      story:'The node was empty. Whoever emptied it left in a hurry — logs torn out, a coffee still warm in the audit trail. You repaired everything and learned the first rule of hunting: absence is a signal. And right now, the whole road ahead is absent.',
-      real:'"Quiet networks" during an incident often mean an attacker with administrative access deleting logs. If defenders see nothing, it usually means nothing is being recorded — not that nothing is happening.',
+      story:'This node was empty. Whoever emptied it left in a hurry: logs torn out, accounts disabled in a pattern no administrator follows. You repaired everything and found the first rule of hunting: absence is a signal. An attacker with enough access does not hide the attack — they hide the record of it. And right now, the whole road ahead of you is quiet in exactly that way.',
+      real:'"Quiet networks" during an incident usually mean an attacker with administrative access who has deleted logs and disabled monitoring. If defenders see nothing for a while, the honest interpretation is often not "nothing happened" but "nothing is being recorded." That is why good architectures keep logs off the attacked machine, in a place the attacker must be caught breaking into.',
       btn:'CONTINUE',then:()=>{W.cluster++;nextMap();}
     });
     return;
@@ -1052,43 +1053,43 @@ function startRun(){
   updateToolHUD();renderNodeStrip();
   $('hud').style.display='block';
   hideAllScreens();
-  feed('You are the only light on this network. It knows.','good');
+  feed('You are the last defense program on this network. Keep the nodes alive: they are the computers everyone depends on.','good');
   unlockCodex('cia');
   // ------- COLD OPEN: the tutorial that refuses to be one -------
   beginWaves([
-    { big:'VOLUMETRIC ANOMALY', sub:'they announced themselves — good. volume is honest.',
+    { big:'DDoS FLOOD INBOUND', sub:'a DDoS: junk packets from thousands of hijacked machines, arriving to drown your services in work that means nothing.',
       spawn(){for(let i=0;i<10;i++){const[x,z]=ringSpawn();spawnDelayed(i*.55,()=>spawnEnemy('swarm',x,z,{speed:5.2}));}
-        showObjective('SUPPRESS THE FLOOD','[1] RATE-LIMIT is your tool. Volume is answered by policy.',5);
+        showObjective('SUPPRESS THE FLOOD','[1] RATE-LIMIT drops everything past a threshold. Fire at the swarm — while you are invincible, learn the rhythm.',5);
       },
       onClear(){W.player.inv=false;unlockCodex('rate');unlockCodex('swarm');
         bigScripted({title:'VOLUME, ANSWERED',
-          story:'Ten packets of nothing, from nowhere, forever. You did not outrun them — you out-policy\'d them. That is the whole of it: floods are answered by rules, applied early, applied close.',
-          real:'What you just played is DDoS mitigation. Attackers amplify junk traffic toward a target; defenders cap rates, filter spoofed sources, and absorb volume at the edge. The lesson defenders learn in production: you cannot out-process chaos. You can only refuse it.',btn:'THE DARK DEEPENS'});
+          story:'What just happened: a swarm of junk packets tried to reach your nodes. Their purpose was not clever — arrive faster than you can process, and your services drown doing nothing. Your RATE-LIMIT tool answered with a rule, not effort: anything beyond a threshold gets dropped. You never destroyed the swarm one by one; you refused it as a class.',
+          real:'That is DDoS mitigation in production, exactly. Attackers use armies of hijacked machines to send more traffic than a target can process. Defenders cap how much any source may send per second, filter traffic with fake return addresses, and absorb volume at the edge. The lesson defenders learn hardest: you cannot out-process chaos. You can only refuse it with policy.',btn:'THE DARK DEEPENS'});
       }},
-    { big:'LATERAL CREEPER', sub:'something is walking the walls — it wants a node, not you.',
+    { big:'RANSOMWARE WORM', sub:'malware. it will walk to a NODE, encrypt its data, and hold it hostage. the worm wants a node, not you — defend the nodes.',
       spawn(){W.player.toolsUnlocked[1]=true;updateToolHUD();unlockCodex('encrypt');
         for(let i=0;i<2;i++){const[x,z]=ringSpawn();spawnDelayed(i*2.4,()=>spawnEnemy('worm',x,z));}
-        showObjective('NEW TOOL: ENCRYPT [2]','encryption guards what is OWNED. the worm wants to own. swap tools with [2].',5.5);
+        showObjective('NEW TOOL: ENCRYPT [2]','encryption locks data so ransomware gains nothing by stealing it. It is the ONLY tool that hurts the worm. Swap with [2], then defend whichever node it touches.',5.5);
       },
       onClear(){bigScripted({title:'ONE IS NOT NONE',
-        story:'Notice what made your hands flinch: not the worm — the NODE it was touching. You defend a network, not a fight. A thousand enemies at your heels matter less than one ignoring you, busy somewhere you are not looking.',
-        real:'Availability attacks are loud; integrity attacks are quiet. Ransomware does not duel you — it reproduces inside trust boundaries. This is why defenders watch nodes, logs and lateral movement, not just the front door. Ignore one system and you have defended zero.',btn:'THE DARK DEEPENS'});
+        story:'Notice what made you flinch: not the worm attacking you — the worm touching a NODE. A ransomware worm barely cares about defenders. It walks to a computer, encrypts its files so only the attacker can read them, and demands payment. From that one foothold it then copies itself to whatever that computer trusted. A thousand loud enemies matter less than one quiet one working somewhere you stopped looking.',
+        real:'Loud attacks (floods) target availability; malware (ransomware, worms) targets integrity — the guarantee that your data and systems are still yours. Ransomware wins by moving sideways through trust: the printer, the backup server, the intern laptop. This is why real defenders watch NODES and logs, not just the front door. Ignore one system and you have defended zero systems.',btn:'THE DARK DEEPENS'});
       }},
-    { big:'FRIENDLY TRAFFIC', sub:'...all of it.',
+    { big:'A SPOOF IS COMING', sub:'phishing: a packet disguised to look like your own friendly traffic, carrying orders or stolen data back out. Something crossing your network is a lie.',
       spawn(){W.player.toolsUnlocked[2]=true;updateToolHUD();unlockCodex('scan');
         for(let i=0;i<6;i++){const[x,z]=ringSpawn();spawnDelayed(i*.4,()=>spawnEnemy('swarm',x,z,{speed:5.6}));}
         const[x,z]=ringSpawn();
         spawnDelayed(2.5,()=>{spawnEnemy('phish',x,z);
-          showObjective('SOMETHING WEARS OUR COLORS','[3] DEEP SCAN opens what looks normal. You cannot fight what you cannot distinguish.',6);
+          showObjective('SOMETHING WEARS OUR COLORS','[3] DEEP SCAN opens packets and inspects their contents — the only way to catch a disguise. Fire a scan when the phoney comes near; shoot what changes shape.',6);
         });
       },
       onClear(){bigScripted({title:'THE HUMAN IN THE LOOP',
-        story:'It looked like traffic. It traveled like traffic. Everything about it said legitimate — until you looked inside, which is the one thing automation hates and the one thing attackers count on. Now you saw it, and any tool could end it. It was never the strongest thing in the room. It was only ever unseen.',
-        real:'Detection engineering in three sentences: attacks that admit what they are get filtered by policy; attacks that pretend get caught by inspection; and the gap between them is watched by a human analyst whose entire job is to feel that something normal is wrong. Tools scale that feeling. Nothing replaces it.',btn:'THE NETWORK IS YOURS'});
+        story:'One of those friendly packets was not friendly. A phishing packet carries a fake command or stolen data, and its whole design is to look exactly like legitimate traffic — because systems that trust their own traffic do not inspect it. Your automatic defenses waved it through; DEEP SCAN opened it and proved otherwise. The moment it was visible it was killable by anything. It was never stronger than your tools — only invisible to them.',
+        real:'That is detection engineering. Attacks that admit what they are (floods) get filtered by policy. Attacks that pretend (phishing, spoofing, malware hiding in normal traffic) only fall to INSPECTION — opening the packet, checking behavior against context — plus a human analyst whose job is to feel that something normal is wrong. Tools scale the inspection; they do not replace the judgement. The tag you placed with FOCUS is the most human control on any real blue team.',btn:'THE NETWORK IS YOURS'});
       }}
   ],()=>{ // cold open complete
     W.cluster=0;
-    feed('COLD START SURVIVED. the network randomizes from here — no more training wheels.','good');
+    feed('TRAINING ENDS. From here the network is random: floods, worms and spoofed packets in any order, mixed and masked. Everything you need you have already felt once.','good');
     setTimeout(()=>offerCards(),900);
   });
 }
@@ -1131,8 +1132,8 @@ function startBossCluster(){
   W.boss=b;
   $('bossbar').style.display='block';updateBossBar();
   unlockCodex('boss');
-  showObjective('ZERO-DAY','you cannot fight what you cannot see. DEEP SCAN [3] IT. twice.',6);
-  feed('SIGNATURE UNKNOWN — every tool reads it as harmless. That is the horror of a zero-day. DEEP SCAN [3] it twice.','bad');
+  showObjective('ZERO-DAY','a vulnerability nobody has documented yet — your tools read it as harmless. DEEP SCAN [3] it twice until it has a name; only then can anything hurt it.',7);
+  feed('SIGNATURE UNKNOWN — your defenses have no entry for this attack, so every tool reads it as harmless. That is what makes it a zero-day. DEEP SCAN [3] twice to give it a name.','bad');
 }
 function updateBossBar(){
   const b=W.boss;if(!b)return;
@@ -1153,7 +1154,7 @@ function showSummary(){
   $('sumStats').innerHTML=[
     ['',mins+':'+secs,'RUN TIME'],['',W.kills.swarm,'FLOOD PACKETS'],['',W.kills.worm,'WORMS'],['',W.kills.phish,'SPOOFED TRUST'],['',W.cards.length,'DEFENSES'],['',persist.codex.length,'INTEL']
   ].map(s=>'<div class="stat"><div class="v">'+s[1]+'</div><div class="l">'+s[2]+'</div></div>').join('');
-  $('sumIntel').textContent='You covered all three: the flood (availability), the worm (integrity), the spoof (confidentiality) — and then killed something that had no name yet. Defense means answering questions. What you just survived is the question of what it feels like to be the one asking.';
+  $('sumIntel').textContent='This run you defended the three goals every security program exists for: AVAILABILITY (the flood could only take your services down, and rate-limiting said no), INTEGRITY (the worm tried to take ownership of your data, and encryption said no), CONFIDENTIALITY (the spoof tried to read what was not its, and inspection said no). Then you killed a zero-day — an attack with no name — by giving it one. That is the whole of Cybersecurity 101, and you have now done it as verbs.';
   screen('summaryScreen',true);
 }
 $('sumBtn').onclick=()=>{Snd.ui();screen('summaryScreen',false);showFlipTease();};
@@ -1184,7 +1185,7 @@ function startFlip(){
   for(let i=0;i<4;i++){const a=i/4*Math.PI*2;spawnEnemy('swarm',Math.cos(a)*12,Math.sin(a)*12,{speed:5.4});}
   spawnFriendlies(2);
   updateToolHUD();renderNodeStrip();
-  showObjective('YOU ARE THE ZERO-DAY','destroy 3 nodes. the network\'s tools are yours now. 45 seconds before they pull the plug.',8);
+  showObjective('YOU ARE THE MALWARE','destroy 3 nodes — every tool works on them now, because you were built knowing how they work. the network\'s defenses chase you. 45 seconds until they pull the plug.',8);
   feed('You know exactly where the lights are. You installed them.','warn');
 }
 function etcEnd(reason){
@@ -1328,20 +1329,20 @@ function step(dt){
     }else if(tg){
       // attacking a node
       if(e.kind==='worm'){
-        if(MODS.sandbox&&!e.sandboxed){e.sandboxed=true;e.stun=4;feed('SANDBOX CAUGHT THE WORM — running in a room with no doors','good');}
+        if(MODS.sandbox&&!e.sandboxed){e.sandboxed=true;e.stun=4;feed('SANDBOX CAUGHT THE WORM — it runs in an isolated environment where its damage reaches nothing. That is containment.','good');}
         else{
           e.castT+=dts*(MODS.encRest?.55:1);
           if(Math.floor(e.castT*1.2)!==Math.floor((e.castT-dts)*1.2))Snd.wormCast();
           if(e.castT>=5){
             if(tg===W.decoy){tg.state='dead';refreshNode(tg);W.decoy=null;Snd.nodeLost();
-              feed('HONEYPOT SATURATED — the worm died eating a room that was never there. Deception is a control.','good');}
+              feed('HONEYPOT SATURATED — the worm spent its payload on a decoy that holds nothing. Deception is a control: it wastes attacker effort and raises an alarm the moment it is touched.','good');}
             else startInfect(tg,'worm');
             removeEnemy(e);continue;
           }
         }
       }else if(e.kind==='phish'){
         tg.hp-=e.dmg;refreshNode(tg);Snd.wormCast();
-        feed('THE SPOOF STRUCK THE NODE — trusted traffic carried a knife','bad');
+        feed('THE SPOOFED PACKET REACHED A NODE — because it was trusted, nothing checked it, and it tore the node open from inside','bad');
         unlockCodex('phish');
         removeEnemy(e);continue;
       }else{ // swarm nibbles
@@ -1360,7 +1361,7 @@ function step(dt){
       e.fireT-=dts;
       if(e.fireT<=0){
         e.fireT=6.2;
-        if(e.shield>0){feed('the zero-day probes your policy — inspection, not suppression','warn');}
+        if(e.shield>0){feed('the zero-day shifts its exploit — suppressing it is useless while it is unnamed. DEEP SCAN [3] it again.','warn');}
         for(let i=0;i<5;i++){const[x,z]=ringSpawn();spawnDelayed(i*.3,()=>spawnEnemy('swarm',x,z,{speed:6.6}));}
         Snd.wormCast();
       }
